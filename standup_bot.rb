@@ -1,17 +1,19 @@
 require 'tinder'
+require 'yaml'
 
 class StandupBot
 
   def initialize
     @start_time = Time.now
-    @campfire = Tinder::Campfire.new 'twitter', :username => ENV['campfire_username'], :password => ENV['campfire_password']
-    @team = ["Murat Soyupak","Charles Yang", "Taro Minowa", "Lizan Zhou", "Swapnil Jain", "Yoshikatsu Fujita", "Alexandru Ghise", "Heerad Farkhoor", "Victor Dong", "Bowen Zhang", "Peng Jiang", "Siddhant Ujjain", "Jenny Hylbert", "Manzurur Khan", "Shamit Patel", "Josh Yang", "Anthony Smith", "Robert Chang", "Tim Abraham", "Mihai Anca"].shuffle
-    @room = @campfire.find_room_by_id(596947)
+    @config = YAML.load_file("config.yml")
+    @campfire = Tinder::Campfire.new 'twitter', :username => @config['campfire_username'], :password => @config['campfire_password']
+    @team = @config["team"].shuffle
+    @room = @campfire.find_room_by_id(@config['campfire_room'])
   end
 
   def do_standup
     @room.join
-    @room.speak "Hello! We are starting GTE standup!"
+    @room.speak "Hello! We are starting the GTE standup!"
     @room.speak "Please have your standup notes ready"
 
     sleep(10)
@@ -31,7 +33,7 @@ class StandupBot
       else
         message_id = @room.speak "#{member}: Go!"
         sleep(15)
-        messages = @room.recent(:since_message_id => message_id , :limit => 100)
+        messages = @room.recent(:since_message_id => message_id , :limit => 20)
         people_who_spoke = messages.select{|m| m.type == "TextMessage"}.map{|m| m[:user][:name]}.uniq
 
         if people_who_spoke.include?(member)
@@ -59,9 +61,6 @@ class StandupBot
     !@room.users.select{|u| u.name == user}.empty?
   end
 
-  def test
-    
-  end
 end
 
 StandupBot.new.do_standup
