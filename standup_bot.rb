@@ -32,7 +32,7 @@ class StandupBot
 
       else
         message_id = @room.speak "#{member}: Go!"
-        sleep(15)
+        sleep(30)
         messages = @room.recent(:since_message_id => message_id , :limit => 20)
         people_who_spoke = messages.select{|m| m.type == "TextMessage"}.map{|m| m[:user][:name]}.uniq
 
