@@ -31,7 +31,7 @@ class StandupBot
     }
 
     messages = @room.recent(:since_message_id => start_message_id, :limit => 80)
-    people_who_spoke = messages.select{|message| message.type == "TextMessage"}.map{|m| m[:user][:name]}.uniq
+    people_who_spoke = messages.select{|message| message.type == "TextMessage" || message.type = "PasteMessage"}.map{|m| m[:user][:name]}.uniq
     missing = @team - people_who_spoke
 
     @room.speak "We're done with the standup"
