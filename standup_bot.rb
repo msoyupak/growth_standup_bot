@@ -13,48 +13,34 @@ class StandupBot
 
   def do_standup
     @room.join
-    @room.speak "Hello! We are starting the GTE standup!"
+    start_message = @room.speak "Hello! We are starting the GTE standup!"
+    start_message_id = start_message.message.id
     @room.speak "Please have your standup notes ready"
 
     sleep(10)
 
     remaining = @team.dup
-    talked = []
-    missing = []
 
-    while (missing.count + talked.count) < @team.count && Time.now - @start_time < 15 * 60 do
-      member = remaining.sample
-
-      if !user_present?(member)
-        missing << member
-        remaining.delete(member)
-        @room.speak "#{member} is missing"
-
-      else
-        message_id = @room.speak "#{member}: Go!"
+    remaining.each{ |member| 
+      if user_present?(member)
+        @room.speak "#{member}: Go!"
         sleep(30)
-        messages = @room.recent(:since_message_id => message_id , :limit => 20)
-        people_who_spoke = messages.select{|m| m.type == "TextMessage"}.map{|m| m[:user][:name]}.uniq
-
-        if people_who_spoke.include?(member)
-          talked << member
-        else
-          missing << member
-        end
-
-        remaining.delete(member)
+      else
+        @room.speak "#{member} missed the standup"
       end
-    end
-
-    @room.speak "We're done with standup"
-    missing_peeps = ""
-    missing.each{ |m| 
-      missing_peeps = missing_peeps + ", " unless missing_peeps == "" 
-      missing_peeps = missing_peeps + m
     }
 
-    @room.speak "#{missing_peeps} please send your updates in email"
+    messages = @room.recent(:since_message_id => start_message_id, :limit => 80)
+    people_who_spoke = messages.select{|message| message.type == "TextMessage"}.map{|m| m[:user][:name]}.uniq
+    missing = @team - people_who_spoke
 
+    @room.speak "We're done with the standup"
+    missing_peeps = ""
+    missing.each{ |m|
+      missing_peeps = missing_peeps + ", " unless missing_peeps.empty?
+      missing_peeps = missing_peeps + m
+    }
+    @room.speak "#{missing_peeps} please send your updates in email"
   end
 
   def user_present?(user)
