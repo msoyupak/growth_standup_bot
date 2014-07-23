@@ -61,7 +61,7 @@ To: #{address} <#{address}>
 Subject: Standup notes #{Time.now.strftime("%Y-%m-%d")}
 Reply-To: #{reply_to} <#{reply_to}>
 
-You missed the standup on Campfire. Please reply to this email with your notes
+You missed the standup on Campfire. Please reply to this email with your notes if you haven't already
 END_OF_MESSAGE
 
         smtp.send_message(msg, email_config['account'], address)
@@ -73,6 +73,29 @@ END_OF_MESSAGE
     !@room.users.select{|u| u.name == user}.empty?
   end
 
+  def listen
+    begin
+      @room.listen do |message|
+        parse_message(message[:body]) if (message.type == "TextMessage" || message.type == "PasteMessage") && !message[:body].empty?
+      end
+    rescue
+    end
+  end
+  
+  def parse_message(message)
+    opts = message.split
+    parse_bot_commands(opts) if opts.first == "bot" && opts.count > 1
+  end
+
+  def parse_bot_commands(opts)
+    do_standup if opts[1] == "start"
+  end
+
+  def start
+    while(true)
+      listen
+    end
+  end
 end
 
-StandupBot.new.do_standup
+StandupBot.new.start
