@@ -6,7 +6,7 @@ class StandupBot
 
   def initialize
     @start_time = Time.now
-    @config = YAML.load_file("config.yml")
+    @config = YAML.load_file(ARGV[0] || "config.yml")
     @campfire = Tinder::Campfire.new @config['campfire_domain'], :username => @config['campfire_username'], :password => @config['campfire_password']
     @team = @config["team"].map{|person| person["name"]}.shuffle
     @room = @campfire.find_room_by_id(@config['campfire_room'])
@@ -89,6 +89,20 @@ END_OF_MESSAGE
 
   def parse_bot_commands(opts)
     do_standup if opts[1] == "start"
+    print_help if opts[1] == "help"
+    add_user(opts) if opts[1] == "add"
+    remove_user(opts) if opts[1] == "remove"
+  end
+
+  def add_user(opts)
+    
+  end
+
+  def remove_user(opts)
+  end
+
+  def print_help
+    @room.speak "supported commands: \"add {email} {full name}\" \"remove {email}\" \"start\" \"help\" \"ooo {email} {number of days}\""
   end
 
   def start
